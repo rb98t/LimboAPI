@@ -714,37 +714,38 @@ void generateTags(File targetDir, Map<MinecraftVersion, File> tagDirs) {
 }
 
 tasks.register("generateMappings") {
-  dependsOn(downloadManifest)
-
   File targetDir = new File(generatedDir, "mapping")
-  targetDir.mkdirs()
+  if (!new File(targetDir, "tags.json").exists()) {
+    dependsOn(downloadManifest)
+    targetDir.mkdirs()
 
-  this.println("> Generating Minecraft data...")
+    this.println("> Generating Minecraft data...")
 
-  Map<MinecraftVersion, File> generated = Arrays.stream(MinecraftVersion.values())
-          .dropWhile({ it < MinecraftVersion.MINECRAFT_1_13 })
-          .collect(Collectors.toMap(Function.identity(), this::generateData))
+    Map<MinecraftVersion, File> generated = Arrays.stream(MinecraftVersion.values())
+            .dropWhile({ it < MinecraftVersion.MINECRAFT_1_13 })
+            .collect(Collectors.toMap(Function.identity(), this::generateData))
 
-  Map<MinecraftVersion, Object> blockReports = generated.collectEntries({ version, directory ->
-    [version, new JsonSlurper().parse(new File(directory, "reports/blocks.json"))]
-  })
+    Map<MinecraftVersion, Object> blockReports = generated.collectEntries({ version, directory ->
+      [version, new JsonSlurper().parse(new File(directory, "reports/blocks.json"))]
+    })
 
-  this.generateBlockMappings(targetDir, blockReports)
+    this.generateBlockMappings(targetDir, blockReports)
 
-  Map<MinecraftVersion, Object> registriesReports = generated
-          .findAll({ it.getKey() >= MinecraftVersion.MINECRAFT_1_14 })
-          .collectEntries({ version, directory ->
-            [version, new JsonSlurper().parse(new File(directory, "reports/registries.json"))]
-          })
+    Map<MinecraftVersion, Object> registriesReports = generated
+            .findAll({ it.getKey() >= MinecraftVersion.MINECRAFT_1_14 })
+            .collectEntries({ version, directory ->
+              [version, new JsonSlurper().parse(new File(directory, "reports/registries.json"))]
+            })
 
-  this.generateRegistryMappings(targetDir, registriesReports)
+    this.generateRegistryMappings(targetDir, registriesReports)
 
-  Map<MinecraftVersion, File> tags = generated
-          .collectEntries({ version, directory ->
-            [version, new File(directory, "data/minecraft/tags")]
-          })
+    Map<MinecraftVersion, File> tags = generated
+            .collectEntries({ version, directory ->
+              [version, new File(directory, "data/minecraft/tags")]
+            })
 
-  this.generateTags(targetDir, tags)
+    this.generateTags(targetDir, tags)
+  }
 }
 
 processResources.dependsOn(generateMappings)
