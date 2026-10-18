@@ -25,6 +25,7 @@ dependencies() {
   implementation(libs.elytrium.commons.kyori)
 
   implementation(libs.elytrium.fastprepare)
+  compileOnly(files("../../_jars/velocity-4.3.0.jar"))
   compileOnly(libs.minecraft.velocity.api)
   annotationProcessor(libs.minecraft.velocity.api)
   compileOnly(libs.minecraft.velocity.proxy) // From Elytrium Repo.
